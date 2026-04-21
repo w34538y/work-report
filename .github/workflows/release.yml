@@ -6,8 +6,17 @@ on:
       - 'v*'
 
 jobs:
-  release-macos:
-    runs-on: macos-latest
+  release:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            args: ''
+          - os: windows-latest
+            args: ''
+
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -38,8 +47,13 @@ jobs:
           releaseName: '업무보고 아카이브 ${{ github.ref_name }}'
           releaseBody: |
             ## 설치 방법
-            1. `업무보고 아카이브_x.x.x_aarch64.dmg` 다운로드
-            2. DMG 열고 앱을 Applications 폴더로 복사
-            3. 처음 실행 시 **오른쪽 클릭 → 열기** (미서명 앱 경고 우회)
+
+            **macOS** (`_aarch64.dmg`)
+            1. DMG 열고 앱을 Applications 폴더로 복사
+            2. 처음 실행 시 **오른쪽 클릭 → 열기** (미서명 앱 경고 우회)
+
+            **Windows** (`.exe`)
+            1. 설치 파일 실행
+            2. "Windows의 PC 보호" 경고 시 **추가 정보 → 실행** 클릭
           releaseDraft: false
           prerelease: false
