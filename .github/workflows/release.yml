@@ -87,7 +87,10 @@ jobs:
 
             **macOS** (`_aarch64.dmg`)
             1. DMG 열고 앱을 Applications 폴더로 복사
-            2. 처음 실행 시 **오른쪽 클릭 → 열기** 선택
+            2. 처음 실행 시 Gatekeeper 경고가 뜨면 아래 중 하나로 우회:
+               - Finder에서 앱 **오른쪽 클릭 → 열기 → 열기**
+               - 시스템 설정 → 개인 정보 보호 및 보안 → **그래도 열기**
+               - 터미널: `xattr -dr com.apple.quarantine /Applications/업무보고\ 아카이브.app`
 
             **Windows** (`.exe`)
             1. 설치 파일 실행
