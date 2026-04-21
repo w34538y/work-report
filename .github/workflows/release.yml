@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 jobs:
-  release:
+  build:
     permissions:
       contents: write
 
@@ -44,23 +44,43 @@ jobs:
           TAG=${GITHUB_REF_NAME#v}
           sed -i.bak "s/\"version\": \".*\"/\"version\": \"$TAG\"/" src-tauri/tauri.conf.json
 
-      - name: Build & Release
-        uses: tauri-apps/tauri-action@v0
+      - name: Build
+        run: npm run tauri:build
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
+
+      - name: Ad-hoc sign & repackage DMG (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          APP=$(find src-tauri/target/release/bundle/macos -maxdepth 1 -name "*.app" | head -1)
+          ENTITLEMENTS="src-tauri/entitlements.mac.plist"
+          echo "Signing: $APP"
+          codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "$APP"
+          codesign --verify --deep "$APP"
+          DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -1)
+          rm "$DMG"
+          hdiutil create \
+            -volname "업무보고 아카이브" \
+            -srcfolder "$APP" \
+            -ov -format UDZO \
+            "$DMG"
+          echo "DMG: $DMG"
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: '업무보고 아카이브 ${{ github.ref_name }}'
-          releaseBody: |
+          name: '업무보고 아카이브 ${{ github.ref_name }}'
+          body: |
             ## 설치 방법
 
             **macOS** (`_aarch64.dmg`)
             1. DMG 열고 앱을 Applications 폴더로 복사
-            2. 처음 실행 시 **오른쪽 클릭 → 열기** (미서명 앱 경고 우회)
+            2. 처음 실행 시 **오른쪽 클릭 → 열기** 선택
 
             **Windows** (`.exe`)
             1. 설치 파일 실행
             2. "Windows의 PC 보호" 경고 시 **추가 정보 → 실행** 클릭
-          releaseDraft: false
-          prerelease: false
+          files: |
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+          fail_on_unmatched_files: false
