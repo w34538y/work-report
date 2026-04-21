@@ -52,19 +52,31 @@ jobs:
       - name: Ad-hoc sign & repackage DMG (macOS)
         if: runner.os == 'macOS'
         run: |
-          APP=$(find src-tauri/target/release/bundle/macos -maxdepth 1 -name "*.app" | head -1)
           ENTITLEMENTS="src-tauri/entitlements.mac.plist"
-          echo "Signing: $APP"
-          codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "$APP"
-          codesign --verify --deep "$APP"
           DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -1)
+          echo "DMG: $DMG"
+
+          # DMG에서 .app 추출 (Tauri가 빌드 후 .app을 삭제하므로)
+          MOUNT_DIR=$(mktemp -d)
+          hdiutil attach "$DMG" -mountpoint "$MOUNT_DIR" -nobrowse -noverify
+          APP_SRC=$(find "$MOUNT_DIR" -maxdepth 1 -name "*.app" | head -1)
+          TEMP_APP="/tmp/$(basename "$APP_SRC")"
+          cp -R "$APP_SRC" "$TEMP_APP"
+          hdiutil detach "$MOUNT_DIR"
+
+          # Ad-hoc 서명
+          echo "Signing: $TEMP_APP"
+          codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "$TEMP_APP"
+          codesign --verify --deep "$TEMP_APP"
+
+          # 서명된 앱으로 DMG 재생성
           rm "$DMG"
           hdiutil create \
             -volname "업무보고 아카이브" \
-            -srcfolder "$APP" \
+            -srcfolder "$TEMP_APP" \
             -ov -format UDZO \
             "$DMG"
-          echo "DMG: $DMG"
+          echo "Done: $DMG"
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
