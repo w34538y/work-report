@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { api } from '../types'
-import { getWeekRange, formatWeeklyKakao } from '../utils/parser'
+import { formatWeeklyKakao } from '../utils/parser'
 
 interface Props {
   baseDate: string
@@ -8,7 +8,8 @@ interface Props {
 }
 
 export default function WeeklyRangeModal({ baseDate, onClose }: Props) {
-  const { start: defaultStart, end: defaultEnd } = getWeekRange(baseDate)
+  const defaultEnd = baseDate
+  const defaultStart = new Date(new Date(baseDate).getTime() - 6 * 86400000).toISOString().slice(0, 10)
   const [start, setStart] = useState(defaultStart)
   const [end, setEnd] = useState(defaultEnd)
   const [copied, setCopied] = useState(false)
