@@ -1,0 +1,45 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build & Release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: '업무보고 아카이브 ${{ github.ref_name }}'
+          releaseBody: |
+            ## 설치 방법
+            1. `업무보고 아카이브_x.x.x_aarch64.dmg` 다운로드
+            2. DMG 열고 앱을 Applications 폴더로 복사
+            3. 처음 실행 시 **오른쪽 클릭 → 열기** (미서명 앱 경고 우회)
+          releaseDraft: false
+          prerelease: false
