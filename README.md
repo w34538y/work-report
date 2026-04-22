@@ -55,18 +55,30 @@
 
 1. [Releases](https://github.com/w34538y/work-report/releases) 에서 `업무보고 아카이브_x.x.x_aarch64.dmg` 다운로드
 2. DMG를 열고 앱을 **Applications** 폴더로 드래그
-3. 처음 실행 시 미서명 앱 경고가 뜨면 **오른쪽 클릭 → 열기** 선택
+3. 처음 실행 시 아래 경고 중 하나가 뜰 수 있습니다 — **최초 1회만** 우회하면 이후 정상 실행됩니다
 
-> 또는 터미널에서 격리 속성 제거:
+> **"Apple은 악성 코드가 없음을 확인할 수 없습니다"** 경고 시
+>
+> 방법 A (Finder): 앱 아이콘 **오른쪽 클릭 → 열기 → 열기** 클릭
+>
+> 방법 B (시스템 설정): 시스템 설정 → 개인 정보 보호 및 보안 → 하단 **"그래도 열기"** 클릭
+>
+> 방법 C (터미널):
 > ```bash
 > xattr -dr com.apple.quarantine /Applications/업무보고\ 아카이브.app
 > ```
 
+> **"손상되어 열 수 없습니다"** 경고 시 (DMG 파일 자체에 격리 속성이 걸린 경우)
+> ```bash
+> xattr -dr com.apple.quarantine ~/Downloads/업무보고\ 아카이브_x.x.x_aarch64.dmg
+> ```
+> 이후 다시 DMG를 열어 설치하세요.
+
 ### Windows
 
-1. [Releases](https://github.com/w34538y/work-report/releases) 에서 `.exe` 설치 파일 다운로드
+1. [Releases](https://github.com/w34538y/work-report/releases) 에서 `업무보고 아카이브_x.x.x_x64-setup.exe` 다운로드
 2. 설치 파일 실행
-3. "Windows의 PC 보호" 경고 시 **추가 정보 → 실행** 클릭
+3. **"Windows의 PC 보호"** 경고 시 → **추가 정보 → 실행** 클릭
 
 ---
 
