@@ -1017,6 +1017,54 @@ body {
   text-align: center;
 }
 
+/* ── About tab ── */
+.about-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.about-label {
+  color: var(--text2);
+  font-size: 13px;
+  min-width: 80px;
+}
+
+.about-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.about-update-area {
+  padding: 16px 0;
+}
+
+.about-update-status {
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+}
+
+.about-update-status.ok {
+  color: #2ecc71;
+  background: rgba(46, 204, 113, 0.1);
+}
+
+.about-update-available {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.about-update-badge {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
 /* ── Help button ── */
 .btn-help {
   background: transparent;

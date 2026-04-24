@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { getVersion } from '@tauri-apps/api/app'
 import { parseReportText } from '../utils/parser'
 import type { Report, Settings } from '../types'
 import { api } from '../types'
@@ -8,7 +9,7 @@ interface Props {
   onImported: () => void
 }
 
-type Tab = 'text' | 'backup' | 'storage' | 'manage'
+type Tab = 'text' | 'backup' | 'storage' | 'manage' | 'about'
 
 export default function ImportModal({ onClose, onImported }: Props) {
   const [tab, setTab] = useState<Tab>('text')
@@ -30,9 +31,18 @@ export default function ImportModal({ onClose, onImported }: Props) {
   const [storageMsg, setStorageMsg] = useState('')
   const [storageMsgType, setStorageMsgType] = useState<'ok' | 'error' | ''>('')
 
+  // 앱 정보 상태
+  const [currentVersion, setCurrentVersion] = useState<string | null>(null)
+  const [updateInfo, setUpdateInfo] = useState<{ version: string; current_version: string; body: string } | null | 'none'>('none')
+  const [updateChecking, setUpdateChecking] = useState(false)
+  const [installing, setInstalling] = useState(false)
+
   useEffect(() => {
     if (tab === 'storage') {
       api.getSettings().then(setSettings)
+    }
+    if (tab === 'about' && currentVersion === null) {
+      getVersion().then(setCurrentVersion).catch(() => {})
     }
   }, [tab])
 
@@ -110,6 +120,7 @@ export default function ImportModal({ onClose, onImported }: Props) {
           <button className={`modal-tab ${tab === 'backup' ? 'active' : ''}`} onClick={() => setTab('backup')}>백업 / 복원</button>
           <button className={`modal-tab ${tab === 'storage' ? 'active' : ''}`} onClick={() => setTab('storage')}>저장 위치</button>
           <button className={`modal-tab ${tab === 'manage' ? 'active' : ''}`} onClick={() => setTab('manage')}>데이터 관리</button>
+          <button className={`modal-tab ${tab === 'about' ? 'active' : ''}`} onClick={() => setTab('about')}>앱 정보</button>
         </div>
 
         {/* ── 텍스트 이관 ── */}
@@ -328,6 +339,63 @@ export default function ImportModal({ onClose, onImported }: Props) {
               {statusMsg && tab === 'manage' && (
                 <div className={`status-msg ${statusType}`}>{statusMsg}</div>
               )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={onClose}>닫기</button>
+            </div>
+          </>
+        )}
+        {/* ── 앱 정보 ── */}
+        {tab === 'about' && (
+          <>
+            <div className="modal-body">
+              <div className="manage-section">
+                <div className="about-row">
+                  <span className="about-label">현재 버전</span>
+                  <span className="about-value">v{currentVersion ?? '...'}</span>
+                </div>
+
+                <div className="about-update-area">
+                  {updateInfo === 'none' && (
+                    <button
+                      className="btn-primary"
+                      disabled={updateChecking}
+                      onClick={async () => {
+                        setUpdateChecking(true)
+                        try {
+                          const info = await api.checkUpdate()
+                          setUpdateInfo(info)
+                        } catch {
+                          setUpdateInfo(null)
+                        }
+                        setUpdateChecking(false)
+                      }}
+                    >
+                      {updateChecking ? '확인 중...' : '업데이트 확인'}
+                    </button>
+                  )}
+
+                  {updateInfo === null && (
+                    <div className="about-update-status ok">최신 버전입니다.</div>
+                  )}
+
+                  {updateInfo && updateInfo !== 'none' && (
+                    <div className="about-update-available">
+                      <div className="about-update-badge">새 버전 v{updateInfo.version} 사용 가능</div>
+                      <button
+                        className="btn-save"
+                        disabled={installing}
+                        onClick={async () => {
+                          setInstalling(true)
+                          try { await api.installUpdate() } catch { setInstalling(false) }
+                        }}
+                      >
+                        {installing ? '설치 중...' : '지금 업데이트'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             <div className="modal-footer">
               <button className="btn-secondary" onClick={onClose}>닫기</button>
