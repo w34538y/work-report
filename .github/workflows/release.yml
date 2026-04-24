@@ -192,6 +192,10 @@ jobs:
             > 이미 설치된 경우 앱 실행 시 자동으로 업데이트 알림이 표시됩니다.
           files: |
             artifacts/mac/*.dmg
+            artifacts/mac/*.app.tar.gz
+            artifacts/mac/*.app.tar.gz.sig
             artifacts/win/*-setup.exe
+            artifacts/win/*.nsis.zip
+            artifacts/win/*.nsis.zip.sig
             latest.json
           fail_on_unmatched_files: false
