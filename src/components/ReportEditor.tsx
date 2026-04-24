@@ -6,8 +6,11 @@ import WeeklyRangeModal from './WeeklyRangeModal'
 
 interface Props {
   date: string | null
+  prevDate: string | null
+  nextDate: string | null
   onSaved: (savedDate: string) => void
   onDelete: () => void
+  onNavigate: (date: string) => void
 }
 
 function newSection(): Section {
@@ -23,7 +26,7 @@ const LEAVE_EMOJI: Record<LeaveType, string> = {
   '반반차': '⏰',
 }
 
-export default function ReportEditor({ date, onSaved, onDelete }: Props) {
+export default function ReportEditor({ date, prevDate, nextDate, onSaved, onDelete, onNavigate }: Props) {
   const [report, setReport] = useState<Report | null>(null)
   const [copied, setCopied] = useState(false)
   const [showWeeklyModal, setShowWeeklyModal] = useState(false)
@@ -57,11 +60,23 @@ export default function ReportEditor({ date, onSaved, onDelete }: Props) {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault()
         save()
+      } else if ((e.metaKey || e.ctrlKey) && e.key === '[') {
+        e.preventDefault()
+        if (prevDate) onNavigate(prevDate)
+      } else if ((e.metaKey || e.ctrlKey) && e.key === ']') {
+        e.preventDefault()
+        if (nextDate) onNavigate(nextDate)
       }
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [save])
+  }, [save, prevDate, nextDate, onNavigate])
+
+  const loadPrevContent = async () => {
+    if (!prevDate || !report) return
+    const prev = await api.getReport(prevDate)
+    if (prev) setReport({ ...report, sections: prev.sections, leave_type: prev.leave_type })
+  }
 
   const copyKakao = () => {
     if (!report) return
@@ -239,6 +254,10 @@ export default function ReportEditor({ date, onSaved, onDelete }: Props) {
     <main className="editor">
       <div className="editor-header">
         <div className="editor-title">
+          <div className="editor-nav">
+            <button className="btn-nav" onClick={() => prevDate && onNavigate(prevDate)} disabled={!prevDate} title="이전 보고서 (⌘[)">‹</button>
+            <button className="btn-nav" onClick={() => nextDate && onNavigate(nextDate)} disabled={!nextDate} title="다음 보고서 (⌘])">›</button>
+          </div>
           {isNew ? (
             <div className="date-edit-row">
               <input
@@ -254,6 +273,11 @@ export default function ReportEditor({ date, onSaved, onDelete }: Props) {
           )}
         </div>
         <div className="editor-actions">
+          {isNew && prevDate && (
+            <button className="btn-secondary" onClick={loadPrevContent} title="이전 보고서 내용을 현재에 불러옵니다">
+              이전 내용 불러오기
+            </button>
+          )}
           {!isLeave && (
             <>
               <button className="btn-kakao" onClick={copyKakao}>

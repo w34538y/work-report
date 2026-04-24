@@ -29,7 +29,22 @@ body {
 
 .app {
   display: flex;
+  flex-direction: column;
   height: 100vh;
+  overflow: hidden;
+}
+
+.titlebar {
+  height: 28px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+}
+
+.app-body {
+  display: flex;
+  flex: 1;
   overflow: hidden;
 }
 
@@ -50,9 +65,9 @@ body {
   -webkit-app-region: drag;
 }
 
-/* macOS 신호등 버튼 영역 확보 */
+/* macOS: titlebar가 28px를 차지하므로 추가 패딩 불필요 */
 [data-platform="darwin"] .sidebar-header {
-  padding-top: 46px;
+  padding-top: 16px;
 }
 
 .app-title {
@@ -351,8 +366,32 @@ body {
 .editor-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex: 1;
 }
+
+.editor-nav {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.btn-nav {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text2);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-nav:hover:not(:disabled) { color: var(--text); border-color: var(--accent); }
+.btn-nav:disabled { opacity: 0.25; cursor: not-allowed; }
 
 .editor-title h2 {
   font-size: 18px;
