@@ -28,6 +28,8 @@ export default function HelpModal({ onClose }: Props) {
             <table className="help-shortcut-table">
               <tbody>
                 <tr><td><kbd>⌘S</kbd> / <kbd>Ctrl+S</kbd></td><td>보고서 저장</td></tr>
+                <tr><td><kbd>⌥←</kbd> / <kbd>Alt+←</kbd></td><td>이전(오래된) 보고서로 이동</td></tr>
+                <tr><td><kbd>⌥→</kbd> / <kbd>Alt+→</kbd></td><td>다음(최근) 보고서로 이동</td></tr>
                 <tr><td><kbd>Tab</kbd> (항목에서)</td><td>하위 항목 추가</td></tr>
                 <tr><td><kbd>Enter</kbd> (항목에서)</td><td>다음 항목 추가</td></tr>
                 <tr><td><kbd>Enter</kbd> (하위항목에서)</td><td>다음 하위 항목 추가</td></tr>
