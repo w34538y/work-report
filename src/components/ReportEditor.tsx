@@ -123,12 +123,20 @@ export default function ReportEditor({ date, onSaved, onDelete }: Props) {
     setReport({ ...report, sections })
   }
 
+  const focusInput = (key: string) => {
+    setTimeout(() => {
+      document.querySelector<HTMLInputElement>(`[data-focus="${key}"]`)?.focus()
+    }, 0)
+  }
+
   const addItem = (si: number) => {
     if (!report) return
+    const newIndex = report.sections[si].items.length
     const sections = report.sections.map((s, i) =>
       i === si ? { ...s, items: [...s.items, { content: '', children: [] }] } : s
     )
     setReport({ ...report, sections })
+    focusInput(`${si}-${newIndex}`)
   }
 
   const removeItem = (si: number, ii: number) => {
@@ -141,6 +149,7 @@ export default function ReportEditor({ date, onSaved, onDelete }: Props) {
 
   const addChild = (si: number, ii: number) => {
     if (!report) return
+    const newChildIndex = (report.sections[si].items[ii].children || []).length
     const sections = report.sections.map((s, i) => {
       if (i !== si) return s
       return {
@@ -152,6 +161,7 @@ export default function ReportEditor({ date, onSaved, onDelete }: Props) {
       }
     })
     setReport({ ...report, sections })
+    focusInput(`${si}-${ii}-${newChildIndex}`)
   }
 
   const removeChild = (si: number, ii: number, ci: number) => {
@@ -169,6 +179,24 @@ export default function ReportEditor({ date, onSaved, onDelete }: Props) {
     setReport({ ...report, sections })
   }
 
+  const addChildAfter = (si: number, ii: number, ci: number) => {
+    if (!report) return
+    const sections = report.sections.map((s, i) => {
+      if (i !== si) return s
+      return {
+        ...s,
+        items: s.items.map((item, j) => {
+          if (j !== ii) return item
+          const children = [...(item.children || [])]
+          children.splice(ci + 1, 0, { content: '' })
+          return { ...item, children }
+        })
+      }
+    })
+    setReport({ ...report, sections })
+    focusInput(`${si}-${ii}-${ci + 1}`)
+  }
+
   const handleItemKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, si: number, ii: number) => {
     if (e.key === 'Tab') {
       e.preventDefault()
@@ -176,6 +204,22 @@ export default function ReportEditor({ date, onSaved, onDelete }: Props) {
     } else if (e.key === 'Enter') {
       e.preventDefault()
       addItem(si)
+    }
+  }
+
+  const handleChildKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, si: number, ii: number, ci: number) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      addChildAfter(si, ii, ci)
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      // 하위 항목 마지막이면 부모 다음 항목으로, 아니면 다음 하위 항목으로
+      const children = report?.sections[si].items[ii].children || []
+      if (ci === children.length - 1) {
+        addItem(si)
+      } else {
+        focusInput(`${si}-${ii}-${ci + 1}`)
+      }
     }
   }
 
@@ -278,6 +322,7 @@ export default function ReportEditor({ date, onSaved, onDelete }: Props) {
                           className="item-input"
                           placeholder="업무 항목 입력 (Tab: 하위항목 추가, Enter: 다음 항목)"
                           value={item.content}
+                          data-focus={`${si}-${ii}`}
                           onChange={e => updateItem(si, ii, e.target.value)}
                           onKeyDown={e => handleItemKeyDown(e, si, ii)}
                         />
@@ -293,7 +338,9 @@ export default function ReportEditor({ date, onSaved, onDelete }: Props) {
                             className="item-input child-input"
                             placeholder="하위 항목"
                             value={child.content}
+                            data-focus={`${si}-${ii}-${ci}`}
                             onChange={e => updateChild(si, ii, ci, e.target.value)}
+                            onKeyDown={e => handleChildKeyDown(e, si, ii, ci)}
                           />
                           <button className="btn-remove-item" onClick={() => removeChild(si, ii, ci)}>×</button>
                         </div>
