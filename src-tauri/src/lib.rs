@@ -463,6 +463,21 @@ mod cmd {
         update.download_and_install(|_, _| {}, || {})
             .await
             .map_err(|e| e.to_string())?;
+
+        // macOS: 업데이트 후 quarantine 속성 제거 (Gatekeeper "그래도 열기" 방지)
+        #[cfg(target_os = "macos")]
+        {
+            if let Ok(exe) = std::env::current_exe() {
+                // exe: /.../Work Reporter.app/Contents/MacOS/Work Reporter
+                // bundle: /.../Work Reporter.app
+                if let Some(bundle) = exe.parent().and_then(|p| p.parent()).and_then(|p| p.parent()) {
+                    let _ = std::process::Command::new("xattr")
+                        .args(["-dr", "com.apple.quarantine", &bundle.to_string_lossy().to_string()])
+                        .status();
+                }
+            }
+        }
+
         app.restart();
         Ok(())
     }
