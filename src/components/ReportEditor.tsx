@@ -60,10 +60,10 @@ export default function ReportEditor({ date, prevDate, nextDate, onSaved, onDele
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault()
         save()
-      } else if ((e.metaKey || e.ctrlKey) && e.key === '[') {
+      } else if (e.altKey && e.key === 'ArrowLeft') {
         e.preventDefault()
         if (prevDate) onNavigate(prevDate)
-      } else if ((e.metaKey || e.ctrlKey) && e.key === ']') {
+      } else if (e.altKey && e.key === 'ArrowRight') {
         e.preventDefault()
         if (nextDate) onNavigate(nextDate)
       }
@@ -255,8 +255,8 @@ export default function ReportEditor({ date, prevDate, nextDate, onSaved, onDele
       <div className="editor-header">
         <div className="editor-title">
           <div className="editor-nav">
-            <button className="btn-nav" onClick={() => prevDate && onNavigate(prevDate)} disabled={!prevDate} title="이전 보고서 (⌘[)">‹</button>
-            <button className="btn-nav" onClick={() => nextDate && onNavigate(nextDate)} disabled={!nextDate} title="다음 보고서 (⌘])">›</button>
+            <button className="btn-nav" onClick={() => prevDate && onNavigate(prevDate)} disabled={!prevDate} title="이전 보고서 (⌥←)">‹</button>
+            <button className="btn-nav" onClick={() => nextDate && onNavigate(nextDate)} disabled={!nextDate} title="다음 보고서 (⌥→)">›</button>
           </div>
           {isNew ? (
             <div className="date-edit-row">

@@ -38,8 +38,8 @@ body {
   height: 28px;
   background: var(--bg2);
   border-bottom: 1px solid var(--border);
-  -webkit-app-region: drag;
   flex-shrink: 0;
+  cursor: move;
 }
 
 .app-body {

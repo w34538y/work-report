@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { getCurrentWindow } from '@tauri-apps/api/window'
 import { api } from './types'
 import Sidebar from './components/Sidebar'
 import ReportEditor from './components/ReportEditor'
@@ -31,12 +32,15 @@ export default function App() {
 
   // dates는 최신순(내림차순) → 더 오래된 날짜 = 인덱스 큰 쪽
   const currentIdx = selectedDate ? dates.indexOf(selectedDate) : -1
-  const prevDate = currentIdx >= 0 && currentIdx < dates.length - 1 ? dates[currentIdx + 1] : null
+  // 새 보고서(currentIdx === -1)인 경우에도 가장 최근 기존 보고서를 prevDate로 제공
+  const prevDate = currentIdx === -1
+    ? (dates.length > 0 ? dates[0] : null)
+    : (currentIdx < dates.length - 1 ? dates[currentIdx + 1] : null)
   const nextDate = currentIdx > 0 ? dates[currentIdx - 1] : null
 
   return (
     <div className="app" data-platform={isMac ? 'darwin' : 'win32'}>
-      {isMac && <div className="titlebar" />}
+      {isMac && <div className="titlebar" onMouseDown={() => getCurrentWindow().startDragging()} />}
       <div className="app-body">
         <Sidebar
           selectedDate={selectedDate}
