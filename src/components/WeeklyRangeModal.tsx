@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import { api } from '../types'
 import { formatWeeklyKakao } from '../utils/parser'
 
@@ -21,7 +22,7 @@ export default function WeeklyRangeModal({ baseDate, onClose }: Props) {
     try {
       const reports = await api.getReportsByRange(start, end)
       const text = formatWeeklyKakao(reports)
-      await navigator.clipboard.writeText(text)
+      await writeText(text)
       setCopied(true)
       setTimeout(() => { setCopied(false); onClose() }, 1200)
     } catch (e) {

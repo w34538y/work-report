@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s \"https://api.github.com/repos/w34538y/work-report/releases/latest\")",
+      "Bash(python3 -c ' *)"
+    ]
+  }
+}

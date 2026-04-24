@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import type { Report, Section, LeaveType } from '../types'
 import { api } from '../types'
 import { formatForKakao } from '../utils/parser'
@@ -80,7 +81,7 @@ export default function ReportEditor({ date, prevDate, nextDate, onSaved, onDele
 
   const copyKakao = () => {
     if (!report) return
-    navigator.clipboard.writeText(formatForKakao(report))
+    writeText(formatForKakao(report))
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
