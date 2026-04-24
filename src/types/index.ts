@@ -30,6 +30,11 @@ export interface SearchResult {
   project_name: string
 }
 
+export interface Settings {
+  storage_mode: 'local' | 'custom'
+  custom_db_path?: string | null
+}
+
 // Tauri invoke wrapper — same shape as the old window.api
 export const api = {
   platform: navigator.userAgent.includes('Mac') ? 'darwin' : 'win32',
@@ -42,4 +47,7 @@ export const api = {
   clearAllData: () => invoke<{ ok: boolean; count?: number }>('clear_all_data'),
   backupData: () => invoke<{ ok: boolean; count?: number; file_path?: string }>('backup_data'),
   restoreData: () => invoke<{ ok: boolean; count?: number; error?: string }>('restore_data'),
+  getSettings: () => invoke<Settings>('get_settings'),
+  setStorageMode: (mode: 'local' | 'custom', customPath?: string) => invoke<void>('set_storage_mode', { mode, customPath }),
+  pickFolder: () => invoke<string | null>('pick_folder'),
 }

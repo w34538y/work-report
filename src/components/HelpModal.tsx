@@ -76,13 +76,14 @@ export default function HelpModal({ onClose }: Props) {
 
           <section className="help-section">
             <h3>데이터 저장 위치</h3>
-            <p className="help-text">보고서는 날짜별 JSON 파일로 저장됩니다.</p>
+            <p className="help-text">보고서는 SQLite 데이터베이스 파일(<code>reports.db</code>)에 저장됩니다.</p>
             <ul className="help-list">
-              <li>macOS: <code>~/Library/Application Support/com.workreport.archive/reports/</code></li>
-              <li>Windows: <code>%APPDATA%\com.workreport.archive\reports\</code></li>
+              <li><strong>로컬 모드 (기본)</strong></li>
+              <li style={{ paddingLeft: 8 }}>macOS: <code>~/Library/Application Support/com.workreport.archive/reports.db</code></li>
+              <li style={{ paddingLeft: 8 }}>Windows: <code>%APPDATA%\com.workreport.archive\reports.db</code></li>
             </ul>
-            <p className="help-text" style={{ marginTop: 10, color: 'var(--text2)' }}>
-              향후 업데이트에서 SQLite 단일 파일 저장 및 Google Drive 폴더 지정(클라우드 동기화)을 지원할 예정입니다.
+            <p className="help-text" style={{ marginTop: 10 }}>
+              <strong>Google Drive 동기화</strong>: <strong>이관 → 저장 위치</strong> 탭에서 Google Drive for Desktop 폴더를 지정하면 여러 기기 간 자동 동기화됩니다.
             </p>
           </section>
 

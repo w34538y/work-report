@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { parseReportText } from '../utils/parser'
-import type { Report } from '../types'
+import type { Report, Settings } from '../types'
 import { api } from '../types'
 
 interface Props {
@@ -8,7 +8,7 @@ interface Props {
   onImported: () => void
 }
 
-type Tab = 'text' | 'backup' | 'manage'
+type Tab = 'text' | 'backup' | 'storage' | 'manage'
 
 export default function ImportModal({ onClose, onImported }: Props) {
   const [tab, setTab] = useState<Tab>('text')
@@ -24,6 +24,17 @@ export default function ImportModal({ onClose, onImported }: Props) {
   const [statusMsg, setStatusMsg] = useState('')
   const [statusType, setStatusType] = useState<'ok' | 'error' | ''>('')
   const [busy, setBusy] = useState(false)
+
+  // 저장 위치 상태
+  const [settings, setSettings] = useState<Settings | null>(null)
+  const [storageMsg, setStorageMsg] = useState('')
+  const [storageMsgType, setStorageMsgType] = useState<'ok' | 'error' | ''>('')
+
+  useEffect(() => {
+    if (tab === 'storage') {
+      api.getSettings().then(setSettings)
+    }
+  }, [tab])
 
   const showStatus = (msg: string, type: 'ok' | 'error') => {
     setStatusMsg(msg)
@@ -97,6 +108,7 @@ export default function ImportModal({ onClose, onImported }: Props) {
         <div className="modal-tabs">
           <button className={`modal-tab ${tab === 'text' ? 'active' : ''}`} onClick={() => setTab('text')}>텍스트 이관</button>
           <button className={`modal-tab ${tab === 'backup' ? 'active' : ''}`} onClick={() => setTab('backup')}>백업 / 복원</button>
+          <button className={`modal-tab ${tab === 'storage' ? 'active' : ''}`} onClick={() => setTab('storage')}>저장 위치</button>
           <button className={`modal-tab ${tab === 'manage' ? 'active' : ''}`} onClick={() => setTab('manage')}>데이터 관리</button>
         </div>
 
@@ -208,6 +220,88 @@ export default function ImportModal({ onClose, onImported }: Props) {
               </div>
               {statusMsg && tab === 'backup' && (
                 <div className={`status-msg ${statusType}`}>{statusMsg}</div>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button className="btn-secondary" onClick={onClose}>닫기</button>
+            </div>
+          </>
+        )}
+
+        {/* ── 저장 위치 ── */}
+        {tab === 'storage' && (
+          <>
+            <div className="modal-body">
+              <div className="manage-section">
+                <div className={`manage-item ${settings?.storage_mode === 'local' ? 'storage-active' : ''}`}>
+                  <div>
+                    <div className="manage-title">로컬 저장 (기본)</div>
+                    <div className="manage-desc">앱 데이터 폴더에 저장됩니다.<br/>이 기기에서만 사용됩니다.</div>
+                  </div>
+                  <button
+                    className={settings?.storage_mode === 'local' ? 'btn-save' : 'btn-secondary'}
+                    disabled={busy || settings?.storage_mode === 'local'}
+                    onClick={async () => {
+                      setBusy(true); setStorageMsg('')
+                      try {
+                        await api.setStorageMode('local')
+                        const s = await api.getSettings()
+                        setSettings(s)
+                        setStorageMsg('✓ 로컬 저장으로 변경되었습니다.')
+                        setStorageMsgType('ok')
+                      } catch (e) {
+                        setStorageMsg(`오류: ${e}`)
+                        setStorageMsgType('error')
+                      }
+                      setBusy(false)
+                    }}
+                  >
+                    {settings?.storage_mode === 'local' ? '사용 중' : '선택'}
+                  </button>
+                </div>
+
+                <div className={`manage-item ${settings?.storage_mode === 'custom' ? 'storage-active' : ''}`}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="manage-title">Google Drive / 폴더 지정</div>
+                    <div className="manage-desc">
+                      Google Drive for Desktop 동기화 폴더를 지정하면<br/>자동으로 클라우드에 동기화됩니다.
+                    </div>
+                    {settings?.storage_mode === 'custom' && settings.custom_db_path && (
+                      <div className="storage-path">{settings.custom_db_path}</div>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0 }}>
+                    <button
+                      className="btn-primary"
+                      disabled={busy}
+                      onClick={async () => {
+                        setBusy(true); setStorageMsg('')
+                        try {
+                          const folder = await api.pickFolder()
+                          if (!folder) { setBusy(false); return }
+                          const dbPath = folder + '/reports.db'
+                          await api.setStorageMode('custom', dbPath)
+                          const s = await api.getSettings()
+                          setSettings(s)
+                          setStorageMsg('✓ 폴더가 지정되었습니다. 이제 해당 폴더에 저장됩니다.')
+                          setStorageMsgType('ok')
+                        } catch (e) {
+                          setStorageMsg(`오류: ${e}`)
+                          setStorageMsgType('error')
+                        }
+                        setBusy(false)
+                      }}
+                    >
+                      폴더 선택
+                    </button>
+                    {settings?.storage_mode === 'custom' && (
+                      <span className="storage-badge">사용 중</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+              {storageMsg && (
+                <div className={`status-msg ${storageMsgType}`}>{storageMsg}</div>
               )}
             </div>
             <div className="modal-footer">

@@ -21,4 +21,5 @@ tauri = { version = "2", features = [] }
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-shell = "2"
+rusqlite = { version = "0.32", features = ["bundled"] }
 regex = "1"

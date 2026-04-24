@@ -890,6 +890,25 @@ body {
   color: #e74c3c;
 }
 
+/* ── Storage tab ── */
+.storage-active {
+  border-color: #2ecc71 !important;
+  background: rgba(46, 204, 113, 0.06);
+}
+.storage-path {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 6px;
+  font-family: 'Menlo', 'Monaco', monospace;
+  word-break: break-all;
+}
+.storage-badge {
+  font-size: 11px;
+  color: #2ecc71;
+  font-weight: 600;
+  text-align: center;
+}
+
 /* ── Help button ── */
 .btn-help {
   background: transparent;
