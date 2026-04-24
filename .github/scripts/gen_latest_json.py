@@ -1,4 +1,4 @@
-import json, os, datetime, urllib.parse
+import json, os, datetime
 
 tag      = os.environ["TAG"]
 repo     = os.environ["REPO"]
@@ -13,8 +13,9 @@ win_file = os.path.basename(win_zip)
 mac_sig = open(mac_tar + ".sig").read().strip()
 win_sig = open(win_zip + ".sig").read().strip()
 
-mac_url  = base_url + "/" + urllib.parse.quote(mac_file)
-win_url  = base_url + "/" + urllib.parse.quote(win_file)
+# GitHub release assets: spaces in filenames are converted to dots in the URL
+mac_url  = base_url + "/" + mac_file.replace(" ", ".")
+win_url  = base_url + "/" + win_file.replace(" ", ".")
 pub_date = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
 
 payload = {
