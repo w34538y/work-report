@@ -998,6 +998,13 @@ body {
 }
 .btn-update-dismiss:hover { color: var(--text); }
 
+.update-error {
+  font-size: 11px;
+  color: #e74c3c;
+  max-width: 260px;
+  word-break: break-all;
+}
+
 /* ── Storage tab ── */
 .storage-active {
   border-color: #2ecc71 !important;

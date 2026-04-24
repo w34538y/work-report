@@ -5,6 +5,7 @@ export default function UpdateBanner() {
   const [update, setUpdate] = useState<{ version: string; current_version: string; body: string } | null>(null)
   const [installing, setInstalling] = useState(false)
   const [dismissed, setDismissed] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     // 시작 후 3초 뒤 백그라운드에서 업데이트 확인
@@ -18,10 +19,12 @@ export default function UpdateBanner() {
 
   const handleInstall = async () => {
     setInstalling(true)
+    setError(null)
     try {
       await api.installUpdate()
-    } catch {
+    } catch (e) {
       setInstalling(false)
+      setError(String(e))
     }
   }
 
@@ -35,6 +38,7 @@ export default function UpdateBanner() {
         </div>
       </div>
       <div className="update-actions">
+        {error && <span className="update-error">{error}</span>}
         <button
           className="btn-update-install"
           onClick={handleInstall}
