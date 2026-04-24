@@ -137,46 +137,53 @@ jobs:
       - name: Generate latest.json
         shell: bash
         run: |
-          TAG=${GITHUB_REF_NAME}
-          VERSION=${TAG#v}
-          REPO="w34538y/work-report"
-          BASE_URL="https://github.com/${REPO}/releases/download/${TAG}"
+          export TAG=${GITHUB_REF_NAME}
+          export REPO="w34538y/work-report"
 
-          MAC_TAR=$(find artifacts/mac -name "*.app.tar.gz" | head -1)
-          WIN_ZIP=$(find artifacts/win -name "*.zip" | grep -v ".sig" | head -1)
+          export MAC_TAR=$(find artifacts/mac -name "*.app.tar.gz" | head -1)
+          export WIN_ZIP=$(find artifacts/win -name "*.zip" | grep -v "\.sig" | head -1)
 
-          MAC_FILE=$(basename "$MAC_TAR")
-          WIN_FILE=$(basename "$WIN_ZIP")
+          if [ -z "$MAC_TAR" ]; then echo "ERROR: macOS tar.gz not found"; exit 1; fi
+          if [ -z "$WIN_ZIP" ]; then echo "ERROR: Windows zip not found"; exit 1; fi
+          if [ ! -f "${MAC_TAR}.sig" ]; then echo "ERROR: macOS sig not found"; exit 1; fi
+          if [ ! -f "${WIN_ZIP}.sig" ]; then echo "ERROR: Windows sig not found"; exit 1; fi
 
-          MAC_SIG=$(cat "${MAC_TAR}.sig")
-          WIN_SIG=$(cat "${WIN_ZIP}.sig")
+          python3 << 'PYEOF'
+import json, os, datetime, urllib.parse
 
-          # URL 인코딩 (공백 → %20)
-          MAC_FILE_ENC=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${MAC_FILE}'))")
-          WIN_FILE_ENC=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${WIN_FILE}'))")
+tag      = os.environ["TAG"]
+repo     = os.environ["REPO"]
+version  = tag.lstrip("v")
+base_url = f"https://github.com/{repo}/releases/download/{tag}"
+mac_tar  = os.environ["MAC_TAR"]
+win_zip  = os.environ["WIN_ZIP"]
 
-          PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+mac_file = os.path.basename(mac_tar)
+win_file = os.path.basename(win_zip)
 
-          cat > latest.json <<EOF
-          {
-            "version": "${VERSION}",
-            "notes": "전체 변경사항: https://github.com/${REPO}/releases/tag/${TAG}",
-            "pub_date": "${PUB_DATE}",
-            "platforms": {
-              "darwin-aarch64": {
-                "signature": "${MAC_SIG}",
-                "url": "${BASE_URL}/${MAC_FILE_ENC}"
-              },
-              "windows-x86_64": {
-                "signature": "${WIN_SIG}",
-                "url": "${BASE_URL}/${WIN_FILE_ENC}"
-              }
-            }
-          }
-          EOF
+mac_sig = open(mac_tar + ".sig").read().strip()
+win_sig = open(win_zip + ".sig").read().strip()
 
-          echo "=== latest.json ==="
-          cat latest.json
+mac_url  = base_url + "/" + urllib.parse.quote(mac_file)
+win_url  = base_url + "/" + urllib.parse.quote(win_file)
+pub_date = datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+
+payload = {
+    "version": version,
+    "notes": f"전체 변경사항: https://github.com/{repo}/releases/tag/{tag}",
+    "pub_date": pub_date,
+    "platforms": {
+        "darwin-aarch64": {"signature": mac_sig, "url": mac_url},
+        "windows-x86_64": {"signature": win_sig, "url": win_url},
+    },
+}
+
+with open("latest.json", "w", encoding="utf-8") as f:
+    json.dump(payload, f, ensure_ascii=False, indent=2)
+
+print("=== latest.json ===")
+print(open("latest.json").read())
+PYEOF
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
