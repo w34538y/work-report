@@ -101,7 +101,11 @@ jobs:
           cp src-tauri/target/release/bundle/dmg/*.dmg        upload/ 2>/dev/null || true
           cp src-tauri/target/release/bundle/macos/*.tar.gz   upload/ 2>/dev/null || true
           cp src-tauri/target/release/bundle/macos/*.tar.gz.sig upload/ 2>/dev/null || true
-          # Windows
+          # Windows — debug: show what Tauri actually generated
+          echo "=== bundle/nsis contents ==="
+          ls -la src-tauri/target/release/bundle/nsis/ 2>/dev/null || echo "(nsis dir not found)"
+          echo "=== bundle/ top-level ==="
+          ls -la src-tauri/target/release/bundle/ 2>/dev/null || echo "(bundle dir not found)"
           cp src-tauri/target/release/bundle/nsis/*-setup.exe upload/ 2>/dev/null || true
           cp src-tauri/target/release/bundle/nsis/*.zip       upload/ 2>/dev/null || true
           cp src-tauri/target/release/bundle/nsis/*.zip.sig   upload/ 2>/dev/null || true
