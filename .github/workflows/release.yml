@@ -140,6 +140,11 @@ jobs:
           export TAG=${GITHUB_REF_NAME}
           export REPO="w34538y/work-report"
 
+          echo "=== artifacts/mac ==="
+          ls -la artifacts/mac/ || true
+          echo "=== artifacts/win ==="
+          ls -la artifacts/win/ || true
+
           export MAC_TAR=$(find artifacts/mac -name "*.app.tar.gz" | head -1)
           export WIN_ZIP=$(find artifacts/win -name "*.zip" | grep -v "\.sig" | head -1)
 
