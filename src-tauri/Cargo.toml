@@ -1,14 +1,14 @@
 [package]
-name = "app"
+name = "work-reporter"
 version = "0.1.0"
-description = "업무보고 아카이브"
+description = "Work Reporter"
 authors = []
 license = ""
 edition = "2021"
 rust-version = "1.77.2"
 
 [lib]
-name = "app_lib"
+name = "work_reporter_lib"
 crate-type = ["cdylib", "rlib"]
 
 [build-dependencies]

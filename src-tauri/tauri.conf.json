@@ -1,6 +1,6 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "업무보고 아카이브",
+  "productName": "Work Reporter",
   "version": "1.0.0",
   "identifier": "com.workreport.archive",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "업무보고 아카이브",
+        "title": "Work Reporter",
         "width": 1100,
         "height": 750,
         "minWidth": 800,
