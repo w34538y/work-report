@@ -67,6 +67,13 @@ pub struct RestoreResult {
     pub error: Option<String>,
 }
 
+#[derive(Serialize)]
+pub struct UpdateInfo {
+    pub version: String,
+    pub current_version: String,
+    pub body: String,
+}
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Settings {
     pub storage_mode: String,   // "local" | "custom"
@@ -432,6 +439,35 @@ mod cmd {
     }
 
     #[tauri::command]
+    pub async fn check_update(app: AppHandle) -> Result<Option<UpdateInfo>, String> {
+        use tauri_plugin_updater::UpdaterExt;
+        let updater = app.updater_builder().build().map_err(|e| e.to_string())?;
+        match updater.check().await {
+            Ok(Some(u)) => Ok(Some(UpdateInfo {
+                version: u.version.clone(),
+                current_version: u.current_version.clone(),
+                body: u.body.clone().unwrap_or_default(),
+            })),
+            Ok(None) => Ok(None),
+            Err(e) => Err(e.to_string()),
+        }
+    }
+
+    #[tauri::command]
+    pub async fn install_update(app: AppHandle) -> Result<(), String> {
+        use tauri_plugin_updater::UpdaterExt;
+        let updater = app.updater_builder().build().map_err(|e| e.to_string())?;
+        let update = updater.check().await
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| "업데이트를 찾을 수 없습니다.".to_string())?;
+        update.download_and_install(|_, _| {}, || {})
+            .await
+            .map_err(|e| e.to_string())?;
+        app.restart();
+        Ok(())
+    }
+
+    #[tauri::command]
     pub async fn set_storage_mode(
         app: AppHandle,
         db_path: State<'_, DbPath>,
@@ -457,6 +493,7 @@ mod cmd {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
@@ -481,6 +518,8 @@ pub fn run() {
             cmd::get_settings,
             cmd::set_storage_mode,
             cmd::pick_folder,
+            cmd::check_update,
+            cmd::install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

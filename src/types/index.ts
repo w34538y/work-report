@@ -50,4 +50,6 @@ export const api = {
   getSettings: () => invoke<Settings>('get_settings'),
   setStorageMode: (mode: 'local' | 'custom', customPath?: string) => invoke<void>('set_storage_mode', { mode, customPath }),
   pickFolder: () => invoke<string | null>('pick_folder'),
+  checkUpdate: () => invoke<{ version: string; current_version: string; body: string } | null>('check_update'),
+  installUpdate: () => invoke<void>('install_update'),
 }

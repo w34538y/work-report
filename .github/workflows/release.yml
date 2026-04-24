@@ -7,9 +7,6 @@ on:
 
 jobs:
   build:
-    permissions:
-      contents: write
-
     strategy:
       fail-fast: false
       matrix:
@@ -48,15 +45,20 @@ jobs:
         run: npm run tauri:build
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
 
-      - name: Ad-hoc sign & repackage DMG (macOS)
+      - name: Ad-hoc sign & repackage DMG + updater tar.gz (macOS)
         if: runner.os == 'macOS'
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: |
           ENTITLEMENTS="src-tauri/entitlements.mac.plist"
           DMG=$(find src-tauri/target/release/bundle/dmg -name "*.dmg" | head -1)
           echo "DMG: $DMG"
 
-          # DMG에서 .app 추출 (Tauri가 빌드 후 .app을 삭제하므로)
+          # DMG에서 .app 추출
           MOUNT_DIR=$(mktemp -d)
           hdiutil attach "$DMG" -mountpoint "$MOUNT_DIR" -nobrowse -noverify
           APP_SRC=$(find "$MOUNT_DIR" -maxdepth 1 -name "*.app" | head -1)
@@ -65,7 +67,6 @@ jobs:
           hdiutil detach "$MOUNT_DIR"
 
           # Ad-hoc 서명
-          echo "Signing: $TEMP_APP"
           codesign --force --deep --sign - --entitlements "$ENTITLEMENTS" "$TEMP_APP"
           codesign --verify --deep "$TEMP_APP"
 
@@ -76,7 +77,106 @@ jobs:
             -srcfolder "$TEMP_APP" \
             -ov -format UDZO \
             "$DMG"
-          echo "Done: $DMG"
+
+          # 업데이터용 tar.gz 재생성 (서명된 .app 기준)
+          APP_NAME=$(basename "$TEMP_APP")
+          PRODUCT="${APP_NAME%.app}"
+          BUNDLE_DIR="src-tauri/target/release/bundle/macos"
+          TAR_FILE="${BUNDLE_DIR}/${PRODUCT}.app.tar.gz"
+          tar -czf "$TAR_FILE" -C /tmp "$APP_NAME"
+
+          # Tauri 업데이터 키로 서명
+          npm run tauri -- signer sign \
+            --private-key "$TAURI_SIGNING_PRIVATE_KEY" \
+            --password "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" \
+            "$TAR_FILE"
+
+          echo "Done: $DMG | $TAR_FILE"
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p upload
+          # macOS
+          cp src-tauri/target/release/bundle/dmg/*.dmg        upload/ 2>/dev/null || true
+          cp src-tauri/target/release/bundle/macos/*.tar.gz   upload/ 2>/dev/null || true
+          cp src-tauri/target/release/bundle/macos/*.tar.gz.sig upload/ 2>/dev/null || true
+          # Windows
+          cp src-tauri/target/release/bundle/nsis/*-setup.exe upload/ 2>/dev/null || true
+          cp src-tauri/target/release/bundle/nsis/*.zip       upload/ 2>/dev/null || true
+          cp src-tauri/target/release/bundle/nsis/*.zip.sig   upload/ 2>/dev/null || true
+          ls -lh upload/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bundle-${{ runner.os }}
+          path: upload/
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: bundle-macOS
+          path: artifacts/mac
+
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: bundle-Windows
+          path: artifacts/win
+
+      - name: Generate latest.json
+        shell: bash
+        run: |
+          TAG=${GITHUB_REF_NAME}
+          VERSION=${TAG#v}
+          REPO="w34538y/work-report"
+          BASE_URL="https://github.com/${REPO}/releases/download/${TAG}"
+
+          MAC_TAR=$(find artifacts/mac -name "*.app.tar.gz" | head -1)
+          WIN_ZIP=$(find artifacts/win -name "*.zip" | grep -v ".sig" | head -1)
+
+          MAC_FILE=$(basename "$MAC_TAR")
+          WIN_FILE=$(basename "$WIN_ZIP")
+
+          MAC_SIG=$(cat "${MAC_TAR}.sig")
+          WIN_SIG=$(cat "${WIN_ZIP}.sig")
+
+          # URL 인코딩 (공백 → %20)
+          MAC_FILE_ENC=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${MAC_FILE}'))")
+          WIN_FILE_ENC=$(python3 -c "import urllib.parse; print(urllib.parse.quote('${WIN_FILE}'))")
+
+          PUB_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+          cat > latest.json <<EOF
+          {
+            "version": "${VERSION}",
+            "notes": "전체 변경사항: https://github.com/${REPO}/releases/tag/${TAG}",
+            "pub_date": "${PUB_DATE}",
+            "platforms": {
+              "darwin-aarch64": {
+                "signature": "${MAC_SIG}",
+                "url": "${BASE_URL}/${MAC_FILE_ENC}"
+              },
+              "windows-x86_64": {
+                "signature": "${WIN_SIG}",
+                "url": "${BASE_URL}/${WIN_FILE_ENC}"
+              }
+            }
+          }
+          EOF
+
+          echo "=== latest.json ==="
+          cat latest.json
 
       - name: Upload to Release
         uses: softprops/action-gh-release@v2
@@ -90,12 +190,15 @@ jobs:
             2. 처음 실행 시 Gatekeeper 경고가 뜨면 아래 중 하나로 우회:
                - Finder에서 앱 **오른쪽 클릭 → 열기 → 열기**
                - 시스템 설정 → 개인 정보 보호 및 보안 → **그래도 열기**
-               - 터미널: `xattr -dr com.apple.quarantine /Applications/업무보고\ 아카이브.app`
+               - 터미널: `xattr -dr com.apple.quarantine /Applications/Work\ Reporter.app`
 
             **Windows** (`.exe`)
             1. 설치 파일 실행
             2. "Windows의 PC 보호" 경고 시 **추가 정보 → 실행** 클릭
+
+            > 이미 설치된 경우 앱 실행 시 자동으로 업데이트 알림이 표시됩니다.
           files: |
-            src-tauri/target/release/bundle/dmg/*.dmg
-            src-tauri/target/release/bundle/nsis/*-setup.exe
+            artifacts/mac/*.dmg
+            artifacts/win/*-setup.exe
+            latest.json
           fail_on_unmatched_files: false

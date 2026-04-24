@@ -3,6 +3,7 @@ import Sidebar from './components/Sidebar'
 import ReportEditor from './components/ReportEditor'
 import ImportModal from './components/ImportModal'
 import HelpModal from './components/HelpModal'
+import UpdateBanner from './components/UpdateBanner'
 import './App.css'
 
 export default function App() {
@@ -24,6 +25,7 @@ export default function App() {
 
   return (
     <div className="app">
+      <UpdateBanner />
       <Sidebar
         selectedDate={selectedDate}
         onSelect={setSelectedDate}

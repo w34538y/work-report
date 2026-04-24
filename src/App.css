@@ -890,6 +890,75 @@ body {
   color: #e74c3c;
 }
 
+/* ── Update banner ── */
+.update-banner {
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  background: var(--bg2);
+  border: 1px solid #2ecc71;
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 2000;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  animation: slide-in 0.2s ease;
+}
+@keyframes slide-in {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.update-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.update-icon { font-size: 20px; }
+.update-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.update-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.update-version {
+  font-size: 11px;
+  color: var(--text2);
+}
+.update-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-update-install {
+  background: #2ecc71;
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-update-install:hover { opacity: 0.9; }
+.btn-update-install:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-update-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--text2);
+  font-size: 14px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.btn-update-dismiss:hover { color: var(--text); }
+
 /* ── Storage tab ── */
 .storage-active {
   border-color: #2ecc71 !important;
