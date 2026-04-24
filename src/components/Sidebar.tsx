@@ -7,6 +7,7 @@ interface Props {
   onSelect: (date: string) => void
   onNew: () => void
   onImport: () => void
+  onHelp: () => void
   refreshKey: number
 }
 
@@ -23,7 +24,7 @@ function buildCalendar(year: number, month: number) {
   return cells
 }
 
-export default function Sidebar({ selectedDate, onSelect, onNew, onImport, refreshKey }: Props) {
+export default function Sidebar({ selectedDate, onSelect, onNew, onImport, onHelp, refreshKey }: Props) {
   const [reports, setReports] = useState<ReportSummary[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<{ report_date: string; content: string; project_name: string }[] | null>(null)
@@ -105,6 +106,7 @@ export default function Sidebar({ selectedDate, onSelect, onNew, onImport, refre
         <div className="sidebar-actions">
           <button className="btn-primary" onClick={onNew}>+ 새 보고서</button>
           <button className="btn-secondary" onClick={onImport}>이관</button>
+          <button className="btn-help" onClick={onHelp} title="사용법 안내">?</button>
         </div>
         <div className="view-toggle">
           <button

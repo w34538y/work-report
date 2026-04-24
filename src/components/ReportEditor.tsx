@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import type { Report, Section, Item, LeaveType } from '../types'
+import type { Report, Section, LeaveType } from '../types'
 import { api } from '../types'
 import { formatForKakao } from '../utils/parser'
 import WeeklyRangeModal from './WeeklyRangeModal'
