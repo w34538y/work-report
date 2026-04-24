@@ -18,12 +18,17 @@ export default function WeeklyRangeModal({ baseDate, onClose }: Props) {
   const handleCopy = async () => {
     if (start > end) return
     setLoading(true)
-    const reports = await api.getReportsByRange(start, end)
-    const text = formatWeeklyKakao(reports)
-    await navigator.clipboard.writeText(text)
-    setLoading(false)
-    setCopied(true)
-    setTimeout(() => { setCopied(false); onClose() }, 1200)
+    try {
+      const reports = await api.getReportsByRange(start, end)
+      const text = formatWeeklyKakao(reports)
+      await navigator.clipboard.writeText(text)
+      setCopied(true)
+      setTimeout(() => { setCopied(false); onClose() }, 1200)
+    } catch (e) {
+      console.error('주간보고 복사 실패:', e)
+    } finally {
+      setLoading(false)
+    }
   }
 
   const fmt = (d: string) => {
